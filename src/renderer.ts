@@ -33,9 +33,16 @@ searchAvinode.addEventListener('click', () => {
     window.electronAPI.searchAvinode()
 });
 
+const selectAvinodeJets = document.getElementById('select_avinode_jets')
+selectAvinodeJets.addEventListener('click', () => {
+    window.electronAPI.selectAvinodeJets()
+});
+
 const searchFlightListPro = document.getElementById('Flight_List_Pro')
 searchFlightListPro.addEventListener('click', () => {
     window.electronAPI.searchFlightListPro()
 });
+
+
 
 console.log('👋 This message is being logged by "renderer.js", included via webpack');
