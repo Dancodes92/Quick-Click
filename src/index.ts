@@ -40,16 +40,22 @@ const createWindow = (): void => {
 
       await page.goto("https://marketplace.avinode.com/sso/mvc/login");
       // wait for user to login
-      await page.waitForNavigation({ timeout: 120000 });
+      await page.type("#username", 'pschneider@luxury.aero'); //use environment variable for this
+      await page.type("#password", 'Luxury1!'); //use environment variable for this
+      await page.click(
+        "body > div.avi-page > div > div > div > div > form > div.avi-button-group.avi-is-section-group > div > button"
+      );
+      await page.waitForTimeout(1000);
+      // await page.waitForNavigation({ timeout: 120000 });
       await page.goto(
      "https://marketplace.avinode.com/marketplace/mvc/search#preSearch"
    );
 
    await page.waitForNavigation({ timeout: 120000 });
 
-        // await page.evaluate(() => {
-        //   window.scrollTo(0, document.body.scrollHeight);
-        // });
+        await page.evaluate(() => {
+          window.scrollTo(0, document.body.scrollHeight);
+        });
 
         // when the user clicks click avinode button on electron app, call avinodeSearch function
        ipcMain.on('select-avinode-jets', async () => {
