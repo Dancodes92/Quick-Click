@@ -28,20 +28,21 @@
 
 import './index.css';
 
-const searchAvinode = document.getElementById('avinode')
-searchAvinode.addEventListener('click', () => {
-    window.electronAPI.searchAvinode()
-});
 
-const selectAvinodeJets = document.getElementById('select_avinode_jets')
-selectAvinodeJets.addEventListener('click', () => {
-    window.electronAPI.selectAvinodeJets()
-});
+
+// const selectFlightListPro = document.getElementById('select_FLP_jets')
+// selectFlightListPro.addEventListener('click', () => {
+//     window.electronAPI.selectFlightListPro()
+// });
 
 const searchFlightListPro = document.getElementById('Flight_List_Pro')
 searchFlightListPro.addEventListener('click', () => {
-    window.electronAPI.searchFlightListPro()
+  const username = (document.getElementById('username') as HTMLInputElement).value;
+  console.log("username: from renderer.ts", username);
+  const password = (document.getElementById('password') as HTMLInputElement).value;
+  window.electronAPI.searchFlightListPro(username, password);
 });
+
 
 
 

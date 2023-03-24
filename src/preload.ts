@@ -5,5 +5,6 @@ import { contextBridge, ipcRenderer } from 'electron';
 contextBridge.exposeInMainWorld('electronAPI', {
     searchAvinode: () => ipcRenderer.send('search-avinode'),
     selectAvinodeJets: () => ipcRenderer.send('select-avinode-jets'),
-    searchFlightListPro: () => ipcRenderer.send('search-flightlistpro')
-})
+    searchFlightListPro: (username: any, password: any) => ipcRenderer.send('search-flightlistpro', username, password)
+  });
+

@@ -64,7 +64,7 @@ const createWindow = (): void => {
       });
   });
 
-  ipcMain.on('search-flightlistpro', () => {
+  ipcMain.on('search-flightlistpro', (event, username, password) => {
     // call puppeteer function
     console.log('search-flightlistpro');
     const executablePath = getChromePath()
@@ -77,37 +77,47 @@ const createWindow = (): void => {
     }).then(async (browser: { newPage: () => any; close: () => any; }) => {
       const page = await browser.newPage()
 
-      await page.goto("https://flightlistpro.com/index.php");
-      await page.waitForNavigation({ timeout: 120000 });
-      await page.waitForNavigation({ timeout: 120000 });
+      await page.goto("https://flightlistpro.com/user-login");
+      console.log('username', username)
+      console.log("pass", password)
+
+      await page.type("#user_name", username);
+      await page.type("#user_password", password);
+      await page.click(
+        "body > section:nth-child(5) > div > div > div > div > div > div.col-md-6.col-sm-6.mobile-full-width > div > form > table > tbody > tr:nth-child(4) > td:nth-child(2) > input"
+      );
+      await page.waitForNavigation({ timeout: 150000 });
 
       const flightPick = async () => {
+        console.log('flightPick')
         // an array of each plane clicked
         await page.evaluate(() => {
           const opAndJet: string[] = [];
           const companyName = document.querySelectorAll(
-            "#frmSelect > table > tbody > tr > td:nth-child(2) > a"
+            "#searchResult_list_ajax > tbody > tr > td.sorting_1 > a"
           ) as NodeListOf<HTMLElement>;
           const jetType = document.querySelectorAll(
-            "#frmSelect > table > tbody > tr > td:nth-child(3) > a"
+            "#searchResult_list_ajax > tbody > tr > td:nth-child(3) > a"
           ) as NodeListOf<HTMLElement>;
           const button = document.querySelectorAll(
-            "#frmSelect > table > tbody > tr > td.phone-column > input[type=checkbox]"
+            "#searchResult_list_ajax > tbody > tr > td:nth-child(1) > input[type=checkbox]"
           ) as NodeListOf<HTMLElement>;
           const tailNumber = document.querySelectorAll(
-            " #frmSelect > table > tbody > tr > td:nth-child(5)"
+            "#searchResult_list_ajax > tbody > tr > td:nth-child(5)"
           ) as NodeListOf<HTMLElement>;
 
           console.log("tailNumber char at 6", tailNumber[0].innerText.charAt(1));
 
           for (let i = 0; i < companyName.length - 1; i++) {
             const curCompanyName = companyName[i];
+
             const curJet = jetType[i];
+
             const compAndType = `${curCompanyName.innerText} ${curJet.innerText}`;
 
+
             if (
-              !opAndJet.includes(compAndType) &&
-              tailNumber[i].innerText.charAt(1) === "N"
+              !opAndJet.includes(compAndType)
             ) {
               button[i].click();
               opAndJet.push(`${curCompanyName.innerText} ${curJet.innerText}`);
@@ -117,33 +127,80 @@ const createWindow = (): void => {
           return opAndJet;
         });
 
-        // if there is a next page button then click it
-        const nextPage = await page.evaluate(() => {
-          const nextPage = document.querySelectorAll(
-            "#frmSelect > table > tbody > tr:nth-child(3) > td > a"
-          ) as NodeListOf<HTMLElement>;
-          const theNextPage = nextPage[nextPage.length - 2];
-          // find the inner text of the next page button
-          const nextPageText = theNextPage?.innerText
-          if (nextPageText === "Next") {
-            theNextPage.click();
-            return true;
-          } else {
-            return false;
-          }
-        });
 
-        if (nextPage) {
-          await page.waitForNavigation();
-          await flightPick();
-          await page.waitForTimeout(1000);
-        } else {
-          // if there is no next page button then return the opAndJet array
-          return;
-        }
+
+        // if there is a next page button then click it
+        // const nextPage = await page.evaluate(() => {
+        //   const nextPage = document.querySelectorAll(
+        //     "#searchResult_list_ajax_wrapper > div.bottom > div.dataTables_paginate.paging_full_numbers > ul > li.paginate_button.next > a"
+        //   ) as NodeListOf<HTMLElement>;
+        //   console.log("nextPage", nextPage);
+        //   const theNextPage = nextPage[nextPage.length - 2];
+        //   console.log("theNextPage", theNextPage);
+        //   // find the inner text of the next page button
+        //   const nextPageText = theNextPage?.innerText
+        //   console.log("nextPageText", nextPageText);
+        //   if (nextPageText === "Next") {
+        //     theNextPage.click();
+        //     return true;
+        //   } else {
+        //     return false;
+        //   }
+        // });
+
+
+
+        // if (nextPage) {
+        //   await page.waitForNavigation();
+        //   await page.waitForTimeout(1000);
+        //   await flightPick();
+        //   await page.waitForTimeout(1000);
+        // } else {
+        //   // if there is no next page button then return the opAndJet array
+        //   console.log("no next page");
+        //   return;
+        // }
       };
 
-      await flightPick();
+      // add the function to the page so that it can be called from the electron app
+      await page.exposeFunction("flightPick", flightPick);
+
+
+      // add a button to the page to trigger the search
+      await page.evaluate(() => {
+        const button = document.createElement("triggerSearch");
+        button.innerText = "Start Selecting";
+        button.id = "searchButton";
+        // position the button on the top right of the page make it red and give it a border
+        button.style.position = "fixed";
+        button.style.top = "0";
+        button.style.right = "0";
+        button.style.borderRadius = "3px";
+        button.style.transition = "background-color 0.2s ease"
+        button.style.background = "red";
+        button.style.color = "white";
+        // move to the left a bit
+        button.style.marginRight = "10px";
+        // flash the button
+        button.style.marginTop = "10px";
+        button.style.padding = "10px";
+        // cursor pointer makes the button look clickable
+        button.style.cursor = "pointer";
+        // add the button to the page
+        document.body.appendChild(button);
+        // when the user clicks the button, call the search function
+        button.addEventListener("click", () => {
+          // now we can call the search function from the page
+          flightPick();
+        });
+
+        // add the function to the window object so that
+
+      });
+
+
+      // when the button is clicked, call the flightPick function
+
 
     })
   })

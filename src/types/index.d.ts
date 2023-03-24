@@ -5,7 +5,8 @@ declare global {
     electronAPI: {
       selectAvinodeJets(): void,
       searchAvinode: () => void,
-      searchFlightListPro: () => void
+      selectFlightListPro: () => void,
+      searchFlightListPro: (username: string, password: string) => void
     }
   }
 }
